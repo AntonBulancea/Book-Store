@@ -119,6 +119,7 @@ namespace Book_Store
             File.WriteAllText("Book StoreF/Book fav list.txt", "");
             File.WriteAllText("Book StoreF/Book style list.txt", "");
 
+
             int tea = 0;
 
             using (System.IO.StreamWriter file = new System.IO.StreamWriter(
