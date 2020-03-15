@@ -85,7 +85,7 @@ namespace Book_Store
                 //then writing that there is error
                 this.Text = "This name already exists!";
             }
-            else
+            else if(textBox1.Text != "")
             {
                 //else,adding new label to the panel 
 
@@ -217,10 +217,26 @@ namespace Book_Store
                     SqlCommand command = new SqlCommand(sqlExpression, connection); //givving command to sql server
                     command.ExecuteNonQuery();
                 }
-                this.Close();
-            }
 
-            //this.Close();
+            }
+            using (SqlConnection connection = new SqlConnection(connectionString)) //Creating new sql connection
+            {
+                connection.Open();
+
+                using (var command = new SqlCommand("DELETE FROM FavouriteBooks", connection)) //delete all info from sql table
+                {
+                    command.ExecuteNonQuery();
+                }
+
+                for (int i = 0; i < FavBooks.Count(); i++)
+                {
+                    string Name = FavBooks.ElementAt(i);
+                    string sqlExpression = "INSERT INTO FavouriteBooks (BookName) VALUES " + "('" + Name + "')";
+                    SqlCommand command = new SqlCommand(sqlExpression, connection);
+                    command.ExecuteNonQuery();
+                }
+            }
+            this.Close();
         }
 
         private void button6_Click(object sender, EventArgs e)
@@ -369,6 +385,12 @@ namespace Book_Store
             }
         }
 
+        private void button4_Click(object sender, EventArgs e)
+        {
+            Settings set = new Settings();
+            set.Show();
+        }
+
         private void Form1_Load(object sender, EventArgs e) //load all info
         {
             comboBox2.Items.Add("Write number");
@@ -411,21 +433,62 @@ namespace Book_Store
                         object Price = reader.GetValue(7);
                         object PriseCurrency = reader.GetValue(8);
 
+                        char FirstChar = name1.ToString()[0];
 
-                        string name = name1.ToString().Substring(1);
+                        string name;
+
+                        if (FirstChar.Equals(' '))
+                        {
+                            name = name1.ToString().Substring(1);
+                        }
+                        else
+                        {
+                            name = name1.ToString();
+                        }
 
 
                         if (true) //was written for future accounts adds
                         {
                             InstBookName(style.ToString(), name.ToString(), description.ToString(),
                             Price.ToString(), PriseCurrency.ToString(), Pages.ToString());
+                            this.Text = isFavourite.ToString();
                         }
                     }
                 }
                 sql.Close();
                 this.Text = "Book List v2.2";
             }
+            using (SqlConnection sql = new SqlConnection(connectionString))
+            {
+                sql.Open();
+                SqlCommand command = new SqlCommand("SELECT * FROM BookListDataBase.dbo.FavouriteBooks", sql);
+                SqlDataReader reader = command.ExecuteReader();
+
+
+                if (reader.HasRows)
+                {
+
+                    while (reader.Read())
+                    {
+                        object name = reader.GetValue(0).ToString();
+
+                        Label a = new Label();
+                        a.Location = new Point(4, y1);
+                        a.Size = new Size(361, 15);
+                        FavBooks.Add(name.ToString());
+                        if (!isFav.ContainsKey(name.ToString()))
+                            isFav.Add(name.ToString(), true);
+                        else
+                            isFav[name.ToString()] = true;
+                        a.Text = name.ToString();
+                        y1 += 15; //plus 15 to y pos
+                        panel2.Controls.Add(a);
+                    }
+                }
+            }
         }
+
+
         private int unusefullFunc(string name, int mode) // not matter
         {
             switch (mode)
