@@ -21,12 +21,12 @@ namespace Book_Store
         public Dictionary<string, string> BookList = new Dictionary<string, string>();
         public Dictionary<string, int> BookNumber = new Dictionary<string, int>();
         public Dictionary<string, bool> isFav = new Dictionary<string, bool>();
-        public Dictionary<string, bool> BooksInCart = new Dictionary<string, bool>();
         public Dictionary<string, int> BookPrice = new Dictionary<string, int>();
         public Dictionary<string, string> PriceCurrency = new Dictionary<string, string>();
         public Dictionary<string, int> BookPageCounter = new Dictionary<string, int>();
 
-        //Lists
+        //Lists 
+        public List<string> BooksInCart = new List<string>();
         public List<string> BookNames = new List<string>();
         public List<string> BookDescriptionList = new List<string>();
         public List<string> FavBooks = new List<string>();
@@ -125,6 +125,60 @@ namespace Book_Store
             }
         }
 
+        private void InstBookName(string Style, string BookName, string BookDesc, string price, string PriceCur, string pages)
+        {
+            //Create new label
+            Label but = new Label();
+            but.Location = new Point(3, y);
+            but.Size = new Size(326, 15);
+
+            BookStyle.Add(Style);
+
+            but.Text = BookName + " (style: " + Style + ")";
+
+            //if name in list exists in book list
+            if (BookList.ContainsKey(BookName))
+            {
+                //then writing that there is error
+                this.Text = "This name already exists!";
+            }
+            else
+            {
+                //else,adding new label to the panel 
+
+                if (price != "" && PriceCur != "")
+                {
+                    BookPrice.Add(BookName, Int32.Parse(price));
+                    PriceCurrency.Add(BookName, PriceCur);
+                }
+                else
+                {
+                    BookPrice.Add(BookName, 0);
+                    PriceCurrency.Add(BookName, "-");
+                }
+
+                if (pages != "")
+                {
+                    BookPageCounter.Add(BookName, Int32.Parse(pages));
+                }
+                else
+                {
+                    BookPageCounter.Add(BookName, 0);
+                }
+
+
+                BookNames.Add(BookName);
+                BookList.Add(BookName, BookDesc);
+                BookStyle.Add(Style);
+                BookDescriptionList.Add(BookDesc);
+                y += 20;
+                count++;
+                panel1.Controls.Add(but);
+
+                this.Text = BookNames[0].ToString();
+            }
+        }
+
         private void button5_Click(object sender, EventArgs e)
         {
             using (SqlConnection connection = new SqlConnection(connectionString)) //Creating new sql connection
@@ -155,7 +209,7 @@ namespace Book_Store
 
                     string sqlExpression = "INSERT INTO BookTable (BookName,BookDescription," + //sql command
                     "BookStyle,UserName,isFavourite,CartStatus,PageCount,Price,PriceCurrency) VALUES " +
-                    "(' " + Name + "','" + Desc + "','" + Style + "',"
+                    "('" + Name + "','" + Desc + "','" + Style + "',"
                     + "'" + CurrentName + "'," + isFavourite + "," +
                     CartStatus + "," + Page + "," + Price + ",'" +
                     PriceCurency + "')";
@@ -190,6 +244,16 @@ namespace Book_Store
                 FavBooks.Remove(textBox3.Text);
                 BookDescriptionList.Remove(textBox3.Text);
                 panel1.Invalidate();    // clear book in list  
+
+                checkBox3.Checked = false;
+                checkBox3.Checked = false;
+                label10.Text = "Book deleted";
+                label11.Text = "Book deleted";
+                textBox8.Text = "";
+                comboBox3.Text = "";
+                textBox7.Text = "";
+                comboBox4.Text = "";
+
                 int y = 14;
                 for (int i = 0; i < BookNames.Count; i++)
                 {
@@ -248,6 +312,8 @@ namespace Book_Store
                 comboBox3.Text = BookPageCounter[textBox3.Text].ToString();
                 comboBox4.Text = PriceCurrency[textBox3.Text];
 
+
+
                 //textBox5.Text = BookPrice[textBox3.Text].ToString();
 
                 if (FavBooks.Contains(textBox3.Text))
@@ -258,24 +324,17 @@ namespace Book_Store
                 {
                     checkBox3.Checked = false;
                 }
-
-                if (BooksInCart.ContainsKey(textBox3.Text))
-                {
-                    checkBox1.Checked = true;
-                }
-                else
-                {
-                    checkBox1.Checked = false;
-                }
             }
             else
             {
                 checkBox3.Checked = false;
-                checkBox1.Checked = false;
+                checkBox3.Checked = false;
                 label10.Text = "Unknown book";
                 label11.Text = "Book name: Unknown";
                 textBox8.Text = "";
                 comboBox3.Text = "";
+                textBox7.Text = "";
+                comboBox4.Text = "";
 
             }
         }
@@ -298,14 +357,13 @@ namespace Book_Store
                 BookPageCounter[textBox3.Text] = Int32.Parse(comboBox3.Text);
             }
         }
-
-        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        private void checkBox1_CheckedChanged_1(object sender, EventArgs e)
         {
-            if (checkBox3.Checked && !BooksInCart.ContainsKey(textBox3.Text))
+            if (checkBox3.Checked && !BooksInCart.Contains(textBox3.Text) && BookNames.Contains(textBox3.Text))
             {
-                    BooksInCart.Add(textBox3.Text, true);
+                BooksInCart.Add(textBox3.Text);
             }
-            else if (!checkBox3.Checked && BooksInCart.ContainsKey(textBox3.Text))
+            else if (!checkBox3.Checked && BooksInCart.Contains(textBox3.Text))
             {
                 BooksInCart.Remove(textBox3.Text);
             }
@@ -342,7 +400,7 @@ namespace Book_Store
                 {
                     while (reader.Read())
                     {
-                        object name = reader.GetValue(0).ToString(); //get info
+                        object name1 = reader.GetValue(0).ToString(); //get info
                         object description = reader.GetValue(1).ToString();
                         object style = reader.GetValue(2);
                         object user = reader.GetValue(3);
@@ -353,44 +411,19 @@ namespace Book_Store
                         object Price = reader.GetValue(7);
                         object PriseCurrency = reader.GetValue(8);
 
-                        if (user.Equals(CurrentName)) //was written for future accounts adds
-                        {
-                            if (!BookNames.Contains(name))
-                            {
-                                Label but = new Label(); // add label to book list
-                                but.Location = new Point(3, y);
-                                but.Size = new Size(326, 15);
-                                BookStyle.Add(style.ToString());
-                                but.Text = name.ToString() + " (style: " + style + ")";
-                                BookNames.Add(name.ToString());
-                                BookList.Add(name.ToString(), description.ToString());
-                                BookStyle.Add(style.ToString());
-                                BookDescriptionList.Add(description.ToString());
-                                PriceCurrency.Add(name.ToString(), PriceCurrency.ToString());
-                                BookPrice.Add(name.ToString(), Int32.Parse(Price.ToString()));
-                                y += 20;
-                                count++;
-                                panel1.Controls.Add(but);
 
-                                if (isFavourite.ToString() == "True")
-                                {
-                                    Label a = new Label(); // add label to fav books list
-                                    a.Location = new Point(4, y1);
-                                    a.Size = new Size(361, 15);
-                                    FavBooks.Add(name.ToString());
-                                    isFav.Add(name.ToString(), true);
-                                    a.Text = name.ToString();
-                                    y1 += 15;
-                                    panel2.Controls.Add(a);
-                                }
-                            }
+                        string name = name1.ToString().Substring(1);
+
+
+                        if (true) //was written for future accounts adds
+                        {
+                            InstBookName(style.ToString(), name.ToString(), description.ToString(),
+                            Price.ToString(), PriseCurrency.ToString(), Pages.ToString());
                         }
                     }
                 }
-
-                foreach (KeyValuePair<string, string> kvp in BookList) { this.Text = kvp.Value; }
-
                 sql.Close();
+                this.Text = "Book List v2.2";
             }
         }
         private int unusefullFunc(string name, int mode) // not matter
