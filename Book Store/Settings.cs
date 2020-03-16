@@ -36,9 +36,20 @@ namespace Book_Store
                 }
                 }
             else if (radioButton2.Checked) {
-                File.WriteAllText("Book StoreF/Book fav list.txt", "");
+                Form1 main = new Form1();
+                string connectionString = main.connectionString;
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    using (var command = new SqlCommand("DELETE FROM FavouriteBooks", connection))
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                }
             }
         }
+        
       
         private void button2_Click(object sender, EventArgs e)
         {

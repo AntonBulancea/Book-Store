@@ -53,6 +53,7 @@
             this.button9 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.label5 = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.textBox8 = new System.Windows.Forms.TextBox();
@@ -68,7 +69,6 @@
             this.textBox3 = new System.Windows.Forms.TextBox();
             this.panel3 = new System.Windows.Forms.Panel();
             this.label10 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
             this.button4 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -163,6 +163,7 @@
             this.comboBox2.Name = "comboBox2";
             this.comboBox2.Size = new System.Drawing.Size(92, 24);
             this.comboBox2.TabIndex = 10;
+            this.comboBox2.SelectedIndexChanged += new System.EventHandler(this.comboBox2_SelectedIndexChanged);
             // 
             // label4
             // 
@@ -351,6 +352,15 @@
             this.groupBox4.TabIndex = 3;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Description";
+            this.groupBox4.Enter += new System.EventHandler(this.groupBox4_Enter);
+            // 
+            // label5
+            // 
+            this.label5.Location = new System.Drawing.Point(7, 180);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(354, 23);
+            this.label5.TabIndex = 34;
+            this.label5.Text = "Style:";
             // 
             // label16
             // 
@@ -491,14 +501,6 @@
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(329, 102);
             this.label10.TabIndex = 2;
-            // 
-            // label5
-            // 
-            this.label5.Location = new System.Drawing.Point(7, 180);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(354, 23);
-            this.label5.TabIndex = 34;
-            this.label5.Text = "Style:";
             // 
             // button4
             // 

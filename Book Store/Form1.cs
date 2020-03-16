@@ -31,7 +31,6 @@ namespace Book_Store
         public List<string> BookDescriptionList = new List<string>();
         public List<string> FavBooks = new List<string>();
         public List<string> BookStyle = new List<string>();
-
         public string connectionString = @"Data Source=WIN-8IOA84HLB36;Initial Catalog=BookListDataBase;Integrated Security=True";
         private string CurrentName = "Anton";
 
@@ -46,10 +45,6 @@ namespace Book_Store
 
         private void button3_Click(object sender, EventArgs e)
         {
-            //Create new label
-            Label but = new Label();
-            but.Location = new Point(3, y);
-            but.Size = new Size(326, 15);
 
             string style;
 
@@ -75,23 +70,34 @@ namespace Book_Store
                 style = "unknown";
             }
 
-            BookStyle.Add(style);
-
+            Label but = new Label();
+            but.Location = new Point(3, y);
+            but.Size = new Size(326, 15);
             but.Text = textBox1.Text + " (style: " + style + ")";
 
             //if name in list exists in book list
             if (BookList.ContainsKey(textBox1.Text))
             {
                 //then writing that there is error
-                this.Text = "This name already exists!";
+                MessageBox.Show("This name already exists! Please,rewrite it", "Book Name Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-            else if(textBox1.Text != "")
+            else
             {
                 //else,adding new label to the panel 
 
-                if (textBox4.Text != "" && comboBox1.Text != "")
+                if (comboBox1.Text != "" && textBox4.Text != "")
                 {
-                    BookPrice.Add(textBox1.Text, Int32.Parse(textBox4.Text));
+                    try
+                    {
+                        BookPrice.Add(textBox1.Text, Int32.Parse(textBox4.Text));
+                    }
+                    catch (FormatException)
+                    {
+                        MessageBox.Show("Format error,please write number", "Format error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        BookPrice.Add(textBox1.Text, 0);
+                    }
+
+
                     PriceCurrency.Add(textBox1.Text, comboBox1.Text);
                 }
                 else
@@ -102,14 +108,21 @@ namespace Book_Store
 
                 if (comboBox2.Text != "")
                 {
-                    BookPageCounter.Add(textBox1.Text, Int32.Parse(comboBox2.Text));
+                    try { BookPageCounter.Add(textBox1.Text, Int32.Parse(comboBox2.Text)); }
+                    catch (FormatException)
+                    {
+                        MessageBox.Show("Format error,please write number", "Format error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        BookPageCounter.Add(textBox1.Text, 0);
+                    }
+
+
                 }
                 else
                 {
                     BookPageCounter.Add(textBox1.Text, 0);
                 }
 
-
+                BookStyle.Add(style);
                 BookNames.Add(textBox1.Text);
                 BookList.Add(textBox1.Text, textBox2.Text);
                 BookStyle.Add(style);
@@ -122,8 +135,10 @@ namespace Book_Store
                 y += 20;
                 count++;
                 panel1.Controls.Add(but);
+                MessageBox.Show("Book " + textBox1.Text + " was added succesfull", "Book added", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
+
 
         private void InstBookName(string Style, string BookName, string BookDesc, string price, string PriceCur, string pages)
         {
@@ -181,73 +196,91 @@ namespace Book_Store
 
         private void button5_Click(object sender, EventArgs e)
         {
+            bool SqlConnectionComplete = true;
+
             using (SqlConnection connection = new SqlConnection(connectionString)) //Creating new sql connection
             {
-                connection.Open(); //opening it
-
-                using (var command = new SqlCommand("DELETE FROM BookTable", connection)) //delete all info from sql table
+                try
                 {
-                    command.ExecuteNonQuery();
+                    connection.Open();
+                }
+                catch (SqlException)
+                {
+                    MessageBox.Show("Sql Connection Open Error", "Sql server open error,please ask administration (error code: Sql Exeption)", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    SqlConnectionComplete = false;
+                }
+                catch (InvalidOperationException)
+                {
+                    MessageBox.Show("Sql Open Error", "Sql server open error,please ask administration (error code: InvalidOperationException)", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    SqlConnectionComplete = false;
                 }
 
-                for (int i = 0; i < BookNames.Count; i++)
+                finally
                 {
-                    string Name = BookNames[i].ToString();
-                    string Desc = BookDescriptionList[i].ToString();
-                    string Style = BookStyle[i].ToString();
-                    int Page = BookPageCounter[Name];
-                    string PriceCurency = PriceCurrency[Name];
-                    int Price = BookPrice[Name];
 
-                    string isFavourite = "0";
-                    string CartStatus = "0";
-
-                    if (isFav.ContainsKey(BookNames[i]) && isFav[BookNames[i]]) //if there is name in fav book list 
-                        isFavourite = "1";
-
-                    Style.ToString();
-
-                    string sqlExpression = "INSERT INTO BookTable (BookName,BookDescription," + //sql command
-                    "BookStyle,UserName,isFavourite,CartStatus,PageCount,Price,PriceCurrency) VALUES " +
-                    "('" + Name + "','" + Desc + "','" + Style + "',"
-                    + "'" + CurrentName + "'," + isFavourite + "," +
-                    CartStatus + "," + Page + "," + Price + ",'" +
-                    PriceCurency + "')";
-
-                    SqlCommand command = new SqlCommand(sqlExpression, connection); //givving command to sql server
-                    command.ExecuteNonQuery();
                 }
 
+                if (SqlConnectionComplete)
+                {
+                    using (var command = new SqlCommand("DELETE FROM BookTable", connection)) //delete all info from sql table
+                    {
+                        command.ExecuteNonQuery();
+                    }
+
+                    for (int i = 0; i < BookNames.Count; i++)
+                    {
+                        string Name = BookNames[i].ToString();
+                        string Desc = BookDescriptionList[i].ToString();
+                        string Style = BookStyle[i].ToString();
+                        int Page = BookPageCounter[Name];
+                        string PriceCurency = PriceCurrency[Name];
+                        int Price = BookPrice[Name];
+
+                        string isFavourite = "0";
+                        string CartStatus = "0";
+
+                        if (isFav.ContainsKey(BookNames[i]) && isFav[BookNames[i]]) //if there is name in fav book list 
+                            isFavourite = "1";
+
+                        Style.ToString();
+
+                        string sqlExpression = "INSERT INTO BookTable (BookName,BookDescription," + //sql command
+                        "BookStyle,UserName,isFavourite,CartStatus,PageCount,Price,PriceCurrency) VALUES " +
+                        "('" + Name + "','" + Desc + "','" + Style + "',"
+                        + "'" + CurrentName + "'," + isFavourite + "," +
+                        CartStatus + "," + Page + "," + Price + ",'" +
+                        PriceCurency + "')";
+
+                        SqlCommand command = new SqlCommand(sqlExpression, connection); //givving command to sql server
+                        command.ExecuteNonQuery();
+                    }
+
+                    using (SqlConnection connection1 = new SqlConnection(connectionString)) //Creating new sql connection
+                    {
+                        connection1.Open();
+
+                        using (var command = new SqlCommand("DELETE FROM FavouriteBooks", connection)) //delete all info from sql table
+                        {
+                            command.ExecuteNonQuery();
+                        }
+
+                        for (int i = 0; i < FavBooks.Count(); i++)
+                        {
+                            string Name = FavBooks.ElementAt(i);
+                            string sqlExpression = "INSERT INTO FavouriteBooks (BookName) VALUES " + "('" + Name + "')";
+                            SqlCommand command = new SqlCommand(sqlExpression, connection);
+                            command.ExecuteNonQuery();
+                        }
+                    }
+                }
+                this.Close();
             }
-            using (SqlConnection connection = new SqlConnection(connectionString)) //Creating new sql connection
-            {
-                connection.Open();
-
-                using (var command = new SqlCommand("DELETE FROM FavouriteBooks", connection)) //delete all info from sql table
-                {
-                    command.ExecuteNonQuery();
-                }
-
-                for (int i = 0; i < FavBooks.Count(); i++)
-                {
-                    string Name = FavBooks.ElementAt(i);
-                    string sqlExpression = "INSERT INTO FavouriteBooks (BookName) VALUES " + "('" + Name + "')";
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
-                    command.ExecuteNonQuery();
-                }
-            }
-            this.Close();
         }
 
         private void button6_Click(object sender, EventArgs e)
         {
             Settings st = new Settings(); //open settings
             st.Show();
-        }
-
-        private void textBox5_TextChanged(object sender, EventArgs e) //not matter
-        {
-
         }
 
         private void button2_Click(object sender, EventArgs e)//  Та самая функция удаления книг
@@ -311,12 +344,6 @@ namespace Book_Store
                 isFav.Remove(textBox7.Text);
             }
         }
-
-        private void checkBox2_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void textBox3_TextChanged(object sender, EventArgs e)
         {
             if (BookNames.Contains(textBox3.Text))
@@ -327,10 +354,6 @@ namespace Book_Store
                 label11.Text = "Book name: " + textBox3.Text;
                 comboBox3.Text = BookPageCounter[textBox3.Text].ToString();
                 comboBox4.Text = PriceCurrency[textBox3.Text];
-
-
-
-                //textBox5.Text = BookPrice[textBox3.Text].ToString();
 
                 if (FavBooks.Contains(textBox3.Text))
                 {
@@ -360,7 +383,14 @@ namespace Book_Store
             BookList[textBox3.Text] = textBox8.Text;
             if (textBox7.Text != "")
             {
-                BookPrice[textBox3.Text] = Int32.Parse(textBox7.Text);
+                try
+                {
+                    BookPrice[textBox3.Text] = Int32.Parse(textBox7.Text);
+                }
+                catch (FormatException)
+                {
+                    MessageBox.Show("Please rewrite book price param", "Format error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
 
             if (comboBox4.Text != "")
@@ -370,19 +400,27 @@ namespace Book_Store
 
             if (comboBox3.Text != "")
             {
-                BookPageCounter[textBox3.Text] = Int32.Parse(comboBox3.Text);
+                try
+                {
+                    BookPageCounter[textBox3.Text] = Int32.Parse(comboBox3.Text);
+                }
+                catch (FormatException)
+                {
+                    MessageBox.Show("Please rewrite book page param", "Format error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+
             }
-        }
-        private void checkBox1_CheckedChanged_1(object sender, EventArgs e)
+            MessageBox.Show("Book info was changed succesfull", "Book info changed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+        private void groupBox4_Enter(object sender, EventArgs e)
         {
-            if (checkBox3.Checked && !BooksInCart.Contains(textBox3.Text) && BookNames.Contains(textBox3.Text))
-            {
-                BooksInCart.Add(textBox3.Text);
-            }
-            else if (!checkBox3.Checked && BooksInCart.Contains(textBox3.Text))
-            {
-                BooksInCart.Remove(textBox3.Text);
-            }
+
+        }
+
+        private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
 
         private void button4_Click(object sender, EventArgs e)
@@ -412,46 +450,65 @@ namespace Book_Store
             comboBox4.Items.Add(" Dollars");
             comboBox4.Items.Add(" Lei");
 
+            bool SqlOpenComplete = true;
+
             using (SqlConnection sql = new SqlConnection(connectionString))
             {
-                sql.Open();
-                SqlCommand command = new SqlCommand("SELECT * FROM BookListDataBase.dbo.BookTable", sql);
-                SqlDataReader reader = command.ExecuteReader();
-
-                if (reader.HasRows)
+                try
                 {
-                    while (reader.Read())
+                    sql.Open();
+                }
+                catch (SqlException)
+                {
+                    MessageBox.Show("Sql Open Error", "Sql server open error,please ask administration", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    SqlOpenComplete = false;
+                }
+                finally
+                {
+
+                }
+
+                if (SqlOpenComplete)
+                {
+
+                    SqlCommand command = new SqlCommand("SELECT * FROM BookListDataBase.dbo.BookTable", sql);
+                    SqlDataReader reader = command.ExecuteReader();
+
+                    if (reader.HasRows)
                     {
-                        object name1 = reader.GetValue(0).ToString(); //get info
-                        object description = reader.GetValue(1).ToString();
-                        object style = reader.GetValue(2);
-                        object user = reader.GetValue(3);
-                        object isFavourite = reader.GetValue(4);
-
-                        object CartStatus = reader.GetValue(5);
-                        object Pages = reader.GetValue(6);
-                        object Price = reader.GetValue(7);
-                        object PriseCurrency = reader.GetValue(8);
-
-                        char FirstChar = name1.ToString()[0];
-
-                        string name;
-
-                        if (FirstChar.Equals(' '))
+                        while (reader.Read())
                         {
-                            name = name1.ToString().Substring(1);
-                        }
-                        else
-                        {
-                            name = name1.ToString();
-                        }
+                            object name1 = reader.GetValue(0).ToString(); //get info
+                            object description = reader.GetValue(1).ToString();
+                            object style = reader.GetValue(2);
+                            object user = reader.GetValue(3);
+                            object isFavourite = reader.GetValue(4);
+
+                            object CartStatus = reader.GetValue(5);
+                            object Pages = reader.GetValue(6);
+                            object Price = reader.GetValue(7);
+                            object PriseCurrency = reader.GetValue(8);
+
+                            char FirstChar = name1.ToString()[0];
+
+                            string name;
+
+                            if (FirstChar.Equals(' '))
+                            {
+                                name = name1.ToString().Substring(1);
+                            }
+                            else
+                            {
+                                name = name1.ToString();
+                            }
 
 
-                        if (true) //was written for future accounts adds
-                        {
-                            InstBookName(style.ToString(), name.ToString(), description.ToString(),
-                            Price.ToString(), PriseCurrency.ToString(), Pages.ToString());
-                            this.Text = isFavourite.ToString();
+                            if (true) //was written for future accounts adds
+                            {
+                                InstBookName(style.ToString(), name.ToString(), description.ToString(),
+                                Price.ToString(), PriseCurrency.ToString(), Pages.ToString());
+                                this.Text = isFavourite.ToString();
+                            }
                         }
                     }
                 }
@@ -460,61 +517,51 @@ namespace Book_Store
             }
             using (SqlConnection sql = new SqlConnection(connectionString))
             {
-                sql.Open();
-                SqlCommand command = new SqlCommand("SELECT * FROM BookListDataBase.dbo.FavouriteBooks", sql);
-                SqlDataReader reader = command.ExecuteReader();
-
-
-                if (reader.HasRows)
+                bool SqlOpenComplete1 = true;
+                try
+                {
+                    sql.Open();
+                }
+                catch (SqlException)
+                {
+                    MessageBox.Show("Sql server open error,please ask administration", "Sql Open Error 2", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    SqlOpenComplete1 = false;
+                }
+                finally
                 {
 
-                    while (reader.Read())
-                    {
-                        object name = reader.GetValue(0).ToString();
+                }
 
-                        Label a = new Label();
-                        a.Location = new Point(4, y1);
-                        a.Size = new Size(361, 15);
-                        FavBooks.Add(name.ToString());
-                        if (!isFav.ContainsKey(name.ToString()))
-                            isFav.Add(name.ToString(), true);
-                        else
-                            isFav[name.ToString()] = true;
-                        a.Text = name.ToString();
-                        y1 += 15; //plus 15 to y pos
-                        panel2.Controls.Add(a);
+                if (SqlOpenComplete1)
+                {
+
+
+                    SqlCommand command = new SqlCommand("SELECT * FROM BookListDataBase.dbo.FavouriteBooks", sql);
+                    SqlDataReader reader = command.ExecuteReader();
+
+
+                    if (reader.HasRows)
+                    {
+
+                        while (reader.Read())
+                        {
+                            object name = reader.GetValue(0).ToString();
+
+                            Label a = new Label();
+                            a.Location = new Point(4, y1);
+                            a.Size = new Size(361, 15);
+                            FavBooks.Add(name.ToString());
+                            if (!isFav.ContainsKey(name.ToString()))
+                                isFav.Add(name.ToString(), true);
+                            else
+                                isFav[name.ToString()] = true;
+                            a.Text = name.ToString();
+                            y1 += 15; //plus 15 to y pos
+                            panel2.Controls.Add(a);
+                        }
                     }
                 }
             }
-        }
-
-
-        private int unusefullFunc(string name, int mode) // not matter
-        {
-            switch (mode)
-            {
-                case 1:
-                    for (int i = 0; i < BookList.Count(); i++)
-                    {
-                        if (BookDescriptionList[i] == name)
-                        {
-                            return i;
-                        }
-                    }
-                    break;
-
-                case 2:
-                    for (int i = 0; i < BookList.Count(); i++)
-                    {
-                        if (BookStyle[i] == name)
-                        {
-                            return i;
-                        }
-                    }
-                    break;
-            }
-
-            return 0;
         }
     }
 }
