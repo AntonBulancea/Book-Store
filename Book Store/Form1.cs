@@ -3,7 +3,6 @@
  * 
  *
  */
-
 // System libs init
 using System;
 using System.Collections.Generic;
@@ -31,7 +30,7 @@ namespace Book_Store
         public List<string> BookDescriptionList = new List<string>();
         public List<string> FavBooks = new List<string>();
         public List<string> BookStyle = new List<string>();
-        public string connectionString = @"Data Source=WIN-8IOA84HLB36;Initial Catalog=BookListDataBase;Integrated Security=True";
+        public string connectionString = @"Data Source=LAPTOP;Initial Catalog=BookListDataBase;Integrated Security=True";
         private string CurrentName = "Anton";
 
         int y = 14, count, y1 = 0;
@@ -42,7 +41,6 @@ namespace Book_Store
         {
             InitializeComponent();
         }
-
         private void button3_Click(object sender, EventArgs e)
         {
 
@@ -138,8 +136,6 @@ namespace Book_Store
                 MessageBox.Show("Book " + textBox1.Text + " was added succesfull", "Book added", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
-
-
         private void InstBookName(string Style, string BookName, string BookDesc, string price, string PriceCur, string pages)
         {
             //Create new label
@@ -193,8 +189,7 @@ namespace Book_Store
                 this.Text = BookNames[0].ToString();
             }
         }
-
-        private void button5_Click(object sender, EventArgs e)
+        private void button5_Click_1(object sender, EventArgs e)
         {
             bool SqlConnectionComplete = true;
 
@@ -206,7 +201,7 @@ namespace Book_Store
                 }
                 catch (SqlException)
                 {
-                    MessageBox.Show("Sql Connection Open Error", "Sql server open error,please ask administration (error code: Sql Exeption)", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Sql Open Error", "Sql server open error,please ask administration (error code: Sql Exeption)", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     SqlConnectionComplete = false;
                 }
                 catch (InvalidOperationException)
@@ -276,13 +271,11 @@ namespace Book_Store
                 this.Close();
             }
         }
-
         private void button6_Click(object sender, EventArgs e)
         {
             Settings st = new Settings(); //open settings
             st.Show();
         }
-
         private void button2_Click(object sender, EventArgs e)//  Та самая функция удаления книг
         {
             if (BookList.ContainsKey(textBox3.Text))
@@ -315,12 +308,10 @@ namespace Book_Store
                 }
             }
         }
-
         private void button9_Click(object sender, EventArgs e) //Not matter
         {
             this.Text = "Book List v2.2";
         }
-
         private void checkBox3_CheckedChanged(object sender, EventArgs e)
         {
             if (checkBox3.Checked && BookNames.Contains(textBox3.Text) && !FavBooks.Contains(textBox3.Text))
@@ -377,7 +368,10 @@ namespace Book_Store
 
             }
         }
+        void CloseReason_Click() {
+            MessageBox.Show("Sql Open Error", "Sql server open error,please ask administration", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
+        }
         private void button1_Click_1(object sender, EventArgs e)
         {
             BookList[textBox3.Text] = textBox8.Text;
@@ -411,24 +405,12 @@ namespace Book_Store
 
             }
             MessageBox.Show("Book info was changed succesfull", "Book info changed", MessageBoxButtons.OK, MessageBoxIcon.Information);
-    }
-
-        private void groupBox4_Enter(object sender, EventArgs e)
-        {
-
         }
-
-        private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void button4_Click(object sender, EventArgs e)
         {
             Settings set = new Settings();
             set.Show();
         }
-
         private void Form1_Load(object sender, EventArgs e) //load all info
         {
             comboBox2.Items.Add("Write number");
@@ -513,6 +495,7 @@ namespace Book_Store
                     }
                 }
                 sql.Close();
+                this.Size = new Size(1300,469);
                 this.Text = "Book List v2.2";
             }
             using (SqlConnection sql = new SqlConnection(connectionString))
